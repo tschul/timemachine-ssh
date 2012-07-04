@@ -1,19 +1,14 @@
 #!/bin/sh
 
-## CONFIG
+# read in config ile
 
-REMOTEUSER="user" # The ssh user name on remote server
-REMOTEHOST="remote.host.name" # The ssh user password on remote server
-LABEL="DiskStation" # The label for the service, that's registered with dns-sd
-
+echo "Reading config...." >&2
+source app.cfg
+echo "Config for the timemachine server: $REMOTEHOST" >&2
 
 ## NO NEED TO EDIT BELOW THIS LINE
 
-VERSION="2011-12-27"
-
-VERBOSE=false
-
-REMOTELOGIN="$REMOTEUSER@$REMOTEHOST"
+VERSION="2012-07-03"
 
 createTunnel() {
     # Create tunnel to port 548 on remote host and make it avaliable at port 12345 at localhost

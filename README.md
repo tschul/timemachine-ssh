@@ -6,11 +6,12 @@ You can access the remote AFP server via port 12345 on your local machine. After
 
 You run the script via cron to ensure that the connection still exists. If the tunnel is broken, it will be established again. To kill the tunnel you can use '-k' or '--kill' as command line parameters.
 
-## TODO
-
-- Add support for config files
 
 ## CHANGELOG
+
+### 2012-07-03
+- Added support for config files
+- Added support for ssh keys
 
 ### 2011-12-27
 - Added a help screen (-h or --help)
