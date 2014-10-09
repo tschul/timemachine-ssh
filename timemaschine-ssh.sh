@@ -10,8 +10,6 @@ REMOTE_HOST="example.com"
 AFP_HOST="127.0.0.1"
 # Port for tunneled afp service
 LOCAL_AFP_PORT="19548"
-# Port for tunneled ssh service
-LOCAL_SSH_PORT="19022"
 # The label for the service, that's registered with dns-sd
 LABEL="$AFP_HOST over $REMOTE_HOST"
 # The path to the used ssh key file (if exists)
@@ -35,7 +33,7 @@ createTunnel() {
 
     # Create tunnel to port 548 on remote host and make it avaliable at port $LOCAL_AFP_PORT at localhost
     # Also tunnel ssh for connection testing purposes
-    ssh -gNf -L "$LOCAL_AFP_PORT:$AFP_HOST:548" -L "$LOCAL_SSH_PORT:$AFP_HOST:22" -C "$REMOTE_LOGIN"
+    ssh -gNf -L "$LOCAL_AFP_PORT:$AFP_HOST:548" -C "$REMOTE_LOGIN"
 
     if [[ $? -eq 0 ]]; then
         # Register AFP as service via dns-sd
