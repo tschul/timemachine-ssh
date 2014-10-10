@@ -1,52 +1,86 @@
 #!/bin/sh
 
-# read in config ile
+## CONFIGURATION PARAMETERS
 
-echo "Reading config...." >&2
-source app.cfg
-echo "Config for the timemachine server: $REMOTEHOST" >&2
+# The ssh user name on remote server
+REMOTE_USER="user"
+# The hostname of remote server
+REMOTE_HOST="example.com"
+# The remote host with afp service
+AFP_HOST="127.0.0.1"
+# Port for tunneled afp service
+LOCAL_AFP_PORT="19548"
+# The label for the service, that's registered with dns-sd
+LABEL="$AFP_HOST over $REMOTE_HOST"
+# The path to the used ssh key file (if exists)
+KEYFILE=""
+# Quiet mode
+QUIET=false
 
 ## NO NEED TO EDIT BELOW THIS LINE
 
-VERSION="2012-07-03"
+
+VERSION="2014-10-09"
 
 createTunnel() {
-    # Create tunnel to port 548 on remote host and make it avaliable at port 12345 at localhost
+    if [[ -n "$KEYFILE" && -e "$KEYFILE" ]]; then
+        REMOTE_LOGIN="-i $KEYFILE $REMOTE_USER@$REMOTE_HOST"
+    else
+        REMOTE_LOGIN="$REMOTE_USER@$REMOTE_HOST"
+    fi
+
+    if [ "$QUIET" = "false" ]; then echo "Connecting to server: $REMOTE_HOST" >&2; fi
+
+    # Create tunnel to port 548 on remote host and make it avaliable at port $LOCAL_AFP_PORT at localhost
     # Also tunnel ssh for connection testing purposes
-    ssh -gNf \
-    -L 12345:127.0.0.1:548 \
-    -L 19922:127.0.0.1:22 \
-    -C $REMOTELOGIN &
+    ssh -gNf -L "$LOCAL_AFP_PORT:$AFP_HOST:548" -C "$REMOTE_LOGIN"
 
     if [[ $? -eq 0 ]]; then
         # Register AFP as service via dns-sd
-        dns-sd -R $LABEL _afpovertcp._tcp . 12345 > /dev/null &
-        
-        if [ $VERBOSE = "true" ]; then echo Tunnel to $REMOTEHOST created successfully; fi
+        dns-sd -R "$LABEL" _afpovertcp._tcp . "$LOCAL_AFP_PORT" > /dev/null &
+
+        if [ "$QUIET" = "false" ]; then echo "Tunnel to $REMOTE_HOST created successfully"; fi
         exit 0
     else
-        if [ $VERBOSE = "true" ]; then echo An error occurred creating a tunnel to $REMOTEHOST RC was $?; fi
+        if [ "$QUIET" = "false" ]; then echo "An error occurred creating a tunnel to $REMOTE_HOST RC was $?"; fi
         exit 1
     fi
 }
 
 killTunnel() {
-    MYPID=`ps aux | egrep -w "$REMOTEHOST|dns-sd -R $LABEL" | grep -v egrep | awk '{print $2}'`
+    MYPID=`getPid`
     for i in $MYPID; do kill $i; done
-    echo All processes killed
+    if [ "$QUIET" = "false" ]; then echo "All processes killed"; fi
+    exit 0
+}
+
+status() {
+    MYPID=`getPid`
+    if [[ -z "$MYPID" ]]; then
+        if [ "$QUIET" = "false" ]; then echo "Tunnel to $REMOTE_HOST is NOT ACTIVE"; fi
+        exit 0
+    fi
+    if [ "$QUIET" = "false" ]; then echo "Tunnel to $REMOTE_HOST is ACTIVE"; fi
+    exit 1
+}
+
+getPid() {
+    MYPID=`ps aux | egrep -w "$REMOTE_HOST|dns-sd -R $LABEL" | grep -v egrep | awk '{print $2}'`
+    echo $MYPID
 }
 
 help() {
-    echo "ssh-ds  version $VERSION
+    SCRIPT_NAME="$(basename "$(test -L "$0" && readlink "$0" || echo "$0")")"
+    echo "$SCRIPT_NAME version $VERSION
 
-ssh-ds is a small shell script that tunnels the AFP port of your disk station
+$SCRIPT_NAME is a small shell script that tunnels the AFP port of your disk station
 (and propably every other NAS with AFP and SSH services running) over ssh to your client computer.
 
 Put your settings in the config section in the script itself!
 
 Options
- -v, --verbose               increase verbosity
- -k, --kill                  kill all ssh-ds processes
+ -q, --quiet                 quiet mode
+ -k, --kill                  kill all $SCRIPT_NAME processes
  -h, --help                  show this screen
 "
 exit 0
@@ -56,12 +90,14 @@ exit 0
 
 while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
     case "$1" in
+        -s|--status)
+            status
+        ;;
         -k|--kill)
             killTunnel
-            exit 0
         ;;
-        -v|--verbose)
-            VERBOSE=true
+        -q|--quiet)
+            QUIET=true
         ;;
         -h|--help)
             help
@@ -73,10 +109,9 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
     shift       # Check next set of parameters.
 done
 
-## Run the 'ls' command remotely.  If it returns non-zero, create a new connection
-ssh -q -p 19922 $REMOTEUSER@localhost ls > /dev/null
-if [[ $? -ne 0 ]]; then
+MYPID=`getPid`
+if [[ -z "$MYPID" ]]; then
     createTunnel
 else
-    if [ $VERBOSE = "true" ]; then echo Tunnel to $REMOTEHOST is active; fi
+    if [ "$QUIET" = "false" ]; then echo "Tunnel to $REMOTE_HOST is already active"; fi
 fi
