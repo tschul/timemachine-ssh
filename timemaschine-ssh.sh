@@ -20,7 +20,7 @@ QUIET=false
 ## NO NEED TO EDIT BELOW THIS LINE
 
 
-VERSION="2014-10-09"
+VERSION="2014-11-23"
 
 createTunnel() {
     if [[ -n "$KEYFILE" && -e "$KEYFILE" ]]; then
