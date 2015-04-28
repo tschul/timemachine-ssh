@@ -1,8 +1,8 @@
-A small shell script that tunnels the AFP port of your disk station (and propably every other NAS with AFP and SSH services running) over ssh to your client computer.
+[![Bountysource](https://www.bountysource.com/badge/tracker?tracker_id=6846776)](https://www.bountysource.com/trackers/6846776-hypery2k-timemachine-ssh?utm_source=6846776&utm_medium=shield&utm_campaign=TRACKER_BADGE)
 
-So you can access your files and do Time Machine backups on a secured SSH connection via internet, e.g [Ubuntu](http://ubuntuforums.org/showthread.php?t=2105755)
-
-You can access the remote AFP server via port on your local machine. After running the script, the host should show up in Finder on Mac OS.
+> A small shell script that tunnels the AFP port of your disk station (and propably every other NAS with AFP and SSH services running) over ssh to your client computer.
+> So you can access your files and do Time Machine backups on a secured SSH connection via internet, e.g [Ubuntu](http://ubuntuforums.org/showthread.php?t=2105755)
+> You can access the remote AFP server via port on your local machine. After running the script, the host should show up in Finder on Mac OS.
 
 ## Usage
 
