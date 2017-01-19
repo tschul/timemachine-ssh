@@ -33,7 +33,7 @@ createTunnel() {
 
     # Create tunnel to port 548 on remote host and make it avaliable at port $LOCAL_AFP_PORT at localhost
     # Also tunnel ssh for connection testing purposes
-    ssh -gNf -L "$LOCAL_AFP_PORT:$AFP_HOST:548" -C "$REMOTE_LOGIN"
+    ssh -gNf -L "$LOCAL_AFP_PORT:$AFP_HOST:548" -C $REMOTE_LOGIN
 
     if [[ $? -eq 0 ]]; then
         # Register AFP as service via dns-sd
