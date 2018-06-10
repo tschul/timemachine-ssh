@@ -6,6 +6,8 @@
 REMOTE_USER="user"
 # The hostname of remote server
 REMOTE_HOST="example.com"
+# The port number of the remote server
+REMOTE_PORT="11122"
 # The remote host with afp service
 AFP_HOST="127.0.0.1"
 # Port for tunneled afp service
@@ -24,16 +26,18 @@ VERSION="2014-11-23"
 
 createTunnel() {
     if [[ -n "$KEYFILE" && -e "$KEYFILE" ]]; then
-        REMOTE_LOGIN="-i $KEYFILE $REMOTE_USER@$REMOTE_HOST"
+        REMOTE_LOGIN="-i $KEYFILE -p $REMOTE_PORT \
+            $REMOTE_USER@$REMOTE_HOST"
     else
-        REMOTE_LOGIN="$REMOTE_USER@$REMOTE_HOST"
+        REMOTE_LOGIN="-p $REMOTE_PORT \
+            $REMOTE_USER@$REMOTE_HOST"
     fi
 
     if [ "$QUIET" = "false" ]; then echo "Connecting to server: $REMOTE_HOST" >&2; fi
 
     # Create tunnel to port 548 on remote host and make it avaliable at port $LOCAL_AFP_PORT at localhost
     # Also tunnel ssh for connection testing purposes
-    ssh -gNf -L "$LOCAL_AFP_PORT:$AFP_HOST:548" -C "$REMOTE_LOGIN"
+    ssh -gNf -L "$LOCAL_AFP_PORT:$AFP_HOST:548" -C $REMOTE_LOGIN
 
     if [[ $? -eq 0 ]]; then
         # Register AFP as service via dns-sd
@@ -65,7 +69,9 @@ status() {
 }
 
 getPid() {
-    MYPID=`ps aux | egrep -w "$REMOTE_HOST|dns-sd -R $LABEL" | grep -v egrep | awk '{print $2}'`
+    MYPID=`ps aux | egrep -w \
+      "ssh -gNf -L $LOCAL_AFP_PORT:.*$REMOTE_HOST|dns-sd -R $LABEL" \
+      | grep -v egrep | awk '{print $2}'`
     echo $MYPID
 }
 
